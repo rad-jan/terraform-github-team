@@ -1,313 +1,233 @@
-[<img src="https://raw.githubusercontent.com/mineiros-io/brand/3bffd30e8bdbbde32c143e2650b2faa55f1df3ea/mineiros-primary-logo.svg" width="400"/>](https://mineiros.io/?ref=terraform-github-team)
+<!--
+SPDX-FileCopyrightText: 2020-2022 Mineiros GmbH <hello@mineiros.io>
+SPDX-FileCopyrightText: 2025 Radek Janik <cyberwassp@gmail.com>
 
-[![Build Status](https://github.com/mineiros-io/terraform-github-team/workflows/CI/CD%20Pipeline/badge.svg)](https://github.com/mineiros-io/terraform-github-team/actions)
-[![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/mineiros-io/terraform-github-team.svg?label=latest&sort=semver)](https://github.com/mineiros-io/terraform-github-team/releases)
-[![Terraform Version](https://img.shields.io/badge/terraform-1.x-623CE4.svg?logo=terraform)](https://github.com/hashicorp/terraform/releases)
-[![Github Provider Version](https://img.shields.io/badge/GH-4.x-F8991D.svg?logo=terraform)](https://github.com/terraform-providers/terraform-provider-github/releases)
-[![Join Slack](https://img.shields.io/badge/slack-@mineiros--community-f32752.svg?logo=slack)](https://mineiros.io/slack)
+SPDX-License-Identifier: Apache-2.0
+-->
 
 # terraform-github-team
 
-A [Terraform] module that offers a more convenient and tested way to provision and manage [GitHub teams].
+[![Terraform Version](https://img.shields.io/badge/terraform-1.x-623CE4.svg?logo=terraform)](https://github.com/hashicorp/terraform/releases)
+[![Github Provider Version](https://img.shields.io/badge/GH-6.x-F8991D.svg?logo=terraform)](https://github.com/integrations/terraform-provider-github/releases)
 
-**_This module supports Terraform v1.x and is compatible with the Official Terraform GitHub Provider v4.x from `integrations/github`._**
+## Fork Notice
 
-**Attention: This module is incompatible with the Hashicorp GitHub Provider! The latest version of this module supporting `hashicorp/github` provider is `~> 0.6.0`**
+This is a maintained fork of [mineiros-io/terraform-github-team](https://github.com/mineiros-io/terraform-github-team), which is no longer actively maintained. The goal of this fork is to bring the module up to GitHub Provider v6 compatibility and continue ongoing maintenance.
+
+**Attention**: This module requires the `integrations/github` provider and is incompatible with the deprecated `hashicorp/github` provider.
+
+## Warning
+
+**Warning**: As this repository is being brough up to GitHub provider v6, it is
+currently not ready for production, development only. Breaking changes can and
+will be introduced in the meantime. You've been warned.
 
 
-- [Module Features](#module-features)
+
+## Table of Contents
+
+- [Description](#description)
+- [Features](#features)
 - [Getting Started](#getting-started)
-- [Module Argument Reference](#module-argument-reference)
-  - [Main Resource Configuration](#main-resource-configuration)
-  - [Extended Resource Configuration](#extended-resource-configuration)
-    - [Team membership](#team-membership)
-    - [Team repository access](#team-repository-access)
-  - [Module Configuration](#module-configuration)
-- [Module Outputs](#module-outputs)
-- [External Documentation](#external-documentation)
-  - [GitHub Provider Documentation](#github-provider-documentation)
-- [Module Versioning](#module-versioning)
-  - [Backwards compatibility in `0.0.z` and `0.y.z` version](#backwards-compatibility-in-00z-and-0yz-version)
-- [About Mineiros](#about-mineiros)
-- [GitHub as Code](#github-as-code)
-- [Reporting Issues](#reporting-issues)
-- [Contributing](#contributing)
-- [Makefile Targets](#makefile-targets)
-- [License](#license)
+- [Usage](#usage)
+- [Module Reference](#module-reference)
+- [Contribute](#contribute)
+- [Support](#support)
+- [Contact](#contact)
+- [Credits](#credits)
+- [Legal](#legal)
+- [Versioning](#versioning)
 
-## Module Features
+## Description
 
-This module supports the following resources:
+A [Terraform](https://www.terraform.io) module for creating and managing [GitHub Teams](https://docs.github.com/en/organizations/organizing-members-into-teams/about-teams) including memberships and repository access.
 
-- Team
-- Nested Team
-- Memberships
-- Team Repositories
+This module supports Terraform v1.x and is compatible with the Official Terraform GitHub Provider v6.x from `integrations/github`.
+
+Originally developed by [Mineiros](https://github.com/mineiros-io), this fork aims to:
+
+- Update compatibility to GitHub Provider v6
+- Fix outstanding issues and bugs
+- Continue active maintenance and development
+
+In contrast to using individual GitHub provider resources, this module provides a convenient wrapper that manages teams, nested teams, memberships, and repository permissions in a cohesive and tested way.
+
+## Features
+
+- **Default Security Settings**: Secret team visibility by default
+- **Standard Team Features**: Team creation, description, privacy settings, nested teams, LDAP sync
+- **Extended Team Features**: Team memberships (members and maintainers), repository access with granular permissions (admin, maintain, push, triage, pull)
 
 ## Getting Started
 
+Most basic usage creating a GitHub team:
+
 ```hcl
 module "team" {
-  source  = "mineiros-io/team/github"
-  version = "~> 0.8.0"
+  source  = "rad-jan/team/github"
+  version = "~> 0.9.0"
 
   name        = "DevOps"
   description = "The DevOps Team"
   privacy     = "secret"
 
-  members = [
-    "a-user",
-    "b-user"
-  ]
-
-  maintainers = [
-    "a-maintainer"
-  ]
-
-  push_repositories = [
-    github_repository.repository.name,
-  ]
-}
-
-resource "github_repository" "repository" {
-  name   = "a-repository"
-}
-
-provider "github" {}
-
-terraform {
-  required_version = "~> 1.0"
-
-  required_providers {
-    github = {
-      source  = "integrations/github"
-      version = "~> 4.0"
-    }
-  }
+  members     = ["developer-1", "developer-2"]
+  maintainers = ["team-lead"]
 }
 ```
 
-## Module Argument Reference
+## Usage
+
+See [variables.tf](variables.tf) and [examples/](examples/) for detailed use-cases.
+
+The intended behavior is to enforce the state of teams and their configurations. If you modify resources outside of Terraform and reapply the state, conflicting configurations will be overwritten.
+
+For comprehensive documentation on module arguments, outputs, and advanced configurations, see [MODULE_REFERENCE.md](docs/MODULE_REFERENCE.md).
+
+### Quick Reference
+
+| Argument | Description | Default |
+|----------|-------------|---------|
+| `name` | Team name | Required |
+| `description` | Team description | `""` |
+| `privacy` | `secret` or `closed` | `"secret"` |
+| `parent_team_id` | Parent team ID for nested teams | `null` |
+| `create_default_maintainer` | Add creating user as maintainer | `false` |
+| `members` | List of member usernames | `[]` |
+| `maintainers` | List of maintainer usernames | `[]` |
+| `admin_repositories` | Repositories with admin access | `[]` |
+| `maintain_repositories` | Repositories with maintain access | `[]` |
+| `push_repositories` | Repositories with push access | `[]` |
+| `triage_repositories` | Repositories with triage access | `[]` |
+| `pull_repositories` | Repositories with pull access | `[]` |
 
-See [variables.tf] and [examples/] for details and use-cases.
+### Team with Repository Access
 
-### Main Resource Configuration
+```hcl
+module "team" {
+  source = "rad-jan/team/github"
 
-- [**`name`**](#var-name): *(**Required** `string`)*<a name="var-name"></a>
+  name        = "Backend Team"
+  description = "Backend development team"
+  privacy     = "closed"
 
-  The name of the team.
+  # Team members
+  members = [
+    "developer-1",
+    "developer-2",
+  ]
 
-- [**`description`**](#var-description): *(Optional `string`)*<a name="var-description"></a>
+  # Team maintainers
+  maintainers = [
+    "tech-lead",
+  ]
 
-  A description of the team.
+  # Repository permissions
+  admin_repositories = [
+    "backend-core",
+  ]
 
-  Default is `""`.
+  push_repositories = [
+    "backend-api",
+    "backend-services",
+  ]
 
-- [**`privacy`**](#var-privacy): *(Optional `string`)*<a name="var-privacy"></a>
+  pull_repositories = [
+    "frontend-app",
+    "shared-libs",
+  ]
+}
+```
 
-  The level of privacy for the team. Must be one of `secret` or `closed`.
+### Nested Teams
 
-  Default is `"secret"`.
+```hcl
+module "engineering" {
+  source = "rad-jan/team/github"
 
-- [**`parent_team_id`**](#var-parent_team_id): *(Optional `number`)*<a name="var-parent_team_id"></a>
+  name        = "Engineering"
+  description = "All engineering staff"
+  privacy     = "closed"
+}
 
-  The ID of the parent team, if this is a nested team.
+module "backend" {
+  source = "rad-jan/team/github"
 
-  Default is to create a root team without a parent.
+  name           = "Backend"
+  description    = "Backend engineering team"
+  privacy        = "closed"
+  parent_team_id = module.engineering.id
 
-- [**`ldap_dn`**](#var-ldap_dn): *(Optional `string`)*<a name="var-ldap_dn"></a>
+  members     = ["backend-dev-1", "backend-dev-2"]
+  maintainers = ["backend-lead"]
+}
 
-  The LDAP Distinguished Name of the group where membership will be synchronized. Only available in GitHub Enterprise.
+module "frontend" {
+  source = "rad-jan/team/github"
 
-- [**`create_default_maintainer`**](#var-create_default_maintainer): *(Optional `bool`)*<a name="var-create_default_maintainer"></a>
+  name           = "Frontend"
+  description    = "Frontend engineering team"
+  privacy        = "closed"
+  parent_team_id = module.engineering.id
 
-  Adds the creating user to the team when set to `true`."
+  members     = ["frontend-dev-1", "frontend-dev-2"]
+  maintainers = ["frontend-lead"]
+}
+```
 
-  Default is `false`.
+## Module Reference
 
-### Extended Resource Configuration
+For the complete module argument reference, outputs, and advanced configurations, see [docs/MODULE_REFERENCE.md](docs/MODULE_REFERENCE.md).
 
-#### Team membership
+### External Documentation
 
-- [**`maintainers`**](#var-maintainers): *(Optional `set(string)`)*<a name="var-maintainers"></a>
+- [Terraform GitHub Provider - Team](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/team)
+- [Terraform GitHub Provider - Team Membership](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/team_membership)
+- [Terraform GitHub Provider - Team Repository](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/team_repository)
 
-  A list of users that will be added to the current team with maintainer permissions.
+## Contribute
 
-  Default is `[]`.
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
-- [**`members`**](#var-members): *(Optional `set(string)`)*<a name="var-members"></a>
+Areas where help is especially appreciated:
 
-  A list of users that will be added to the current team with member permissions.
+- Testing with GitHub Provider v6
+- Documentation improvements
+- Bug fixes and feature additions
 
-  Default is `[]`.
+## Support
 
-#### Team repository access
+Support is provided on a best effort basis. If you encounter issues or have feature requests, please open an issue on GitHub. The project is best developed in the open so anyone can search for past issues and solutions.
 
-- [**`admin_repositories`**](#var-admin_repositories): *(Optional `set(string)`)*<a name="var-admin_repositories"></a>
+## Contact
 
-  A list of repository names the current team should get [admin](https://docs.github.com/en/organizations/managing-access-to-your-organizations-repositories/repository-roles-for-an-organization#repository-roles-for-organizations) permission to.
+- [GitHub Issues](../../issues) - Bug reports and feature requests
+- [GitHub Discussions](../../discussions) - Questions and community discussion
 
-  Default is `[]`.
+## Credits
 
-- [**`maintain_repositories`**](#var-maintain_repositories): *(Optional `set(string)`)*<a name="var-maintain_repositories"></a>
+This module was originally developed by [Mineiros GmbH](https://mineiros.io). Their work on Terraform modules for GitHub management laid the foundation for this project.
 
-  A list of repository names the current team should get [maintain](https://docs.github.com/en/organizations/managing-access-to-your-organizations-repositories/repository-roles-for-an-organization#repository-roles-for-organizations) permission to.
+Thanks to all contributors to both the original repository and this fork.
 
-  Default is `[]`.
+## Legal
 
-- [**`push_repositories`**](#var-push_repositories): *(Optional `set(string)`)*<a name="var-push_repositories"></a>
+This project is [REUSE-compliant](https://reuse.software).
 
-  A list of repository names the current team should get [push (read-write)](https://docs.github.com/en/organizations/managing-access-to-your-organizations-repositories/repository-roles-for-an-organization#repository-roles-for-organizations) permission to.
+The easiest way to get the copyright and license of the project is with the reuse tool:
 
-  Default is `[]`.
+```sh
+reuse spdx
+```
 
-- [**`triage_repositories`**](#var-triage_repositories): *(Optional `set(string)`)*<a name="var-triage_repositories"></a>
+You can also check this information manually by looking in the file header, a companion `.license` file, or in `.reuse/dep5`.
 
-  A list of repository names the current team should get [push (triage)](https://docs.github.com/en/organizations/managing-access-to-your-organizations-repositories/repository-roles-for-an-organization#repository-roles-for-organizations) permission to.
+All licenses are present in the `LICENSES` directory.
 
-  Default is `[]`.
+## Versioning
 
-- [**`pull_repositories`**](#var-pull_repositories): *(Optional `set(string)`)*<a name="var-pull_repositories"></a>
+This project follows [Semantic Versioning (SemVer)](https://semver.org/):
 
-  A list of repository names the current team should get [pull (read-only)](https://docs.github.com/en/organizations/managing-access-to-your-organizations-repositories/repository-roles-for-an-organization#repository-roles-for-organizations) permission to.
-
-  Default is `[]`.
-
-### Module Configuration
-
-- [**`module_depends_on`**](#var-module_depends_on): *(Optional `list(object)`)*<a name="var-module_depends_on"></a>
-
-  A list of dependencies. Any object can be _assigned_ to this list to define a hidden external dependency.
-
-  Default is `[]`.
-
-- [**`module_enabled`**](#var-module_enabled): *(Optional `bool`)*<a name="var-module_enabled"></a>
-
-  Specifies whether resources in the module will be created.
-
-  Default is `true`.
-
-## Module Outputs
-
-The following attributes are exported in the outputs of the module:
-
-- [**`id`**](#output-id): *(`string`)*<a name="output-id"></a>
-
-  The ID of the team.
-
-- [**`name`**](#output-name): *(`string`)*<a name="output-name"></a>
-
-  The name of the team.
-
-- [**`slug`**](#output-slug): *(`string`)*<a name="output-slug"></a>
-
-  The Slug of the team.
-
-- [**`team`**](#output-team): *(`object(team)`)*<a name="output-team"></a>
-
-  The full team object.
-
-- [**`team_memberships`**](#output-team_memberships): *(`list(team_membership)`)*<a name="output-team_memberships"></a>
-
-  A list of all team memberships.
-
-- [**`team_repositories`**](#output-team_repositories): *(`list(team_repository)`)*<a name="output-team_repositories"></a>
-
-  A list of all team repositories.
-
-## External Documentation
-
-### GitHub Provider Documentation
-
-- https://registry.terraform.io/providers/integrations/github/latest/docs
-
-## Module Versioning
-
-This Module follows the principles of [Semantic Versioning (SemVer)].
-
-Given a version number `MAJOR.MINOR.PATCH`, we increment the:
-
-1. `MAJOR` version when we make incompatible changes,
-2. `MINOR` version when we add functionality in a backwards compatible manner, and
-3. `PATCH` version when we make backwards compatible bug fixes.
-
-### Backwards compatibility in `0.0.z` and `0.y.z` version
-
-- Backwards compatibility in versions `0.0.z` is **not guaranteed** when `z` is increased. (Initial development)
-- Backwards compatibility in versions `0.y.z` is **not guaranteed** when `y` is increased. (Pre-release)
-
-## About Mineiros
-
-[Mineiros][homepage] is a remote-first company headquartered in Berlin, Germany
-that solves development, automation and security challenges in cloud infrastructure.
-
-Our vision is to massively reduce time and overhead for teams to manage and
-deploy production-grade and secure cloud infrastructure.
-
-We offer commercial support for all of our modules and encourage you to reach out
-if you have any questions or need help. Feel free to email us at [hello@mineiros.io] or join our
-[Community Slack channel][slack].
-
-## GitHub as Code
-
-[GitHub as Code][github-as-code] is a commercial solution built on top of
-our open-source Terraform modules for GitHub. It helps our customers to
-manage their GitHub organization more efficiently by enabling anyone in
-their organization to self-service manage on- and offboarding of users,
-repositories, and settings such as branch protections, secrets, and more
-through code.
-
-For details please see [https://www.mineiros.io/github-as-code][github-as-code].
-
-## Reporting Issues
-
-We use GitHub [Issues] to track community reported issues and missing features.
-
-## Contributing
-
-Contributions are always encouraged and welcome! For the process of accepting changes, we use
-[Pull Requests]. If you'd like more information, please see our [Contribution Guidelines].
-
-## Makefile Targets
-
-This repository comes with a handy [Makefile].
-Run `make help` to see details on each available target.
-
-## License
-
-[![license][badge-license]][apache20]
-
-This module is licensed under the Apache License Version 2.0, January 2004.
-Please see [LICENSE] for full details.
-
-Copyright &copy; 2020-2022 [Mineiros GmbH][homepage]
-
-
-<!-- References -->
-
-[homepage]: https://mineiros.io/?ref=terraform-github-team
-[github-as-code]: https://mineiros.io/github-as-code?ref=terraform-github-team
-[hello@mineiros.io]: mailto:hello@mineiros.io
-[badge-build]: https://github.com/mineiros-io/terraform-github-team/workflows/CI/CD%20Pipeline/badge.svg
-[badge-semver]: https://img.shields.io/github/v/tag/mineiros-io/terraform-github-team.svg?label=latest&sort=semver
-[badge-license]: https://img.shields.io/badge/license-Apache%202.0-brightgreen.svg
-[badge-terraform]: https://img.shields.io/badge/terraform-1.x-623CE4.svg?logo=terraform
-[badge-slack]: https://img.shields.io/badge/slack-@mineiros--community-f32752.svg?logo=slack
-[build-status]: https://github.com/mineiros-io/terraform-github-team/actions
-[releases-github]: https://github.com/mineiros-io/terraform-github-team/releases
-[releases-terraform]: https://github.com/hashicorp/terraform/releases
-[badge-tf-gh]: https://img.shields.io/badge/GH-4.x-F8991D.svg?logo=terraform
-[releases-github-provider]: https://github.com/terraform-providers/terraform-provider-github/releases
-[apache20]: https://opensource.org/licenses/Apache-2.0
-[slack]: https://join.slack.com/t/mineiros-community/shared_invite/zt-ehidestg-aLGoIENLVs6tvwJ11w9WGg
-[terraform]: https://www.terraform.io
-[aws]: https://aws.amazon.com/
-[semantic versioning (semver)]: https://semver.org/
-[variables.tf]: https://github.com/mineiros-io/terraform-github-team/blob/main/variables.tf
-[examples/]: https://github.com/mineiros-io/terraform-github-team/tree/main/examples
-[issues]: https://github.com/mineiros-io/terraform-github-team/issues
-[license]: https://github.com/mineiros-io/terraform-github-team/blob/main/LICENSE
-[makefile]: https://github.com/mineiros-io/terraform-github-team/blob/main/Makefile
-[pull requests]: https://github.com/mineiros-io/terraform-github-team/pulls
-[contribution guidelines]: https://github.com/mineiros-io/terraform-github-team/blob/main/CONTRIBUTING.md
-[github teams]: https://help.github.com/en/github/setting-up-and-managing-organizations-and-teams/organizing-members-into-teams
+- `MAJOR` version for incompatible changes
+- `MINOR` version for backwards compatible functionality
+- `PATCH` version for backwards compatible bug fixes
